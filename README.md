@@ -6,7 +6,7 @@ A blend of music, visuals, and interactivity, Pianomancer allows you to create m
 
 ---
 
-![Pianomancer Preview](https://i.imgur.com/D5kFaEW.png)
+![Pianomancer Preview](https://imgur.com/a/pianomancer-D5kFaEW)
 
 ---
 
