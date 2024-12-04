@@ -40,7 +40,7 @@ A blend of music, visuals, and interactivity, Pianomancer allows you to create m
 
 2. **Clone the Repository**  
    ```bash
-   git clone https://github.com/yourusername/pianomancer.git
+   git clone https://github.com/fabiomigueldp/pianomancer.git
    cd pianomancer
    ```
 
@@ -70,7 +70,7 @@ A blend of music, visuals, and interactivity, Pianomancer allows you to create m
 
 3. **Clone the Repository**  
    ```bash
-   git clone https://github.com/yourusername/pianomancer.git
+   git clone https://github.com/fabiomigueldp/pianomancer.git
    cd pianomancer
    ```
 
@@ -99,7 +99,7 @@ A blend of music, visuals, and interactivity, Pianomancer allows you to create m
 
 3. **Clone the Repository**  
    ```bash
-   git clone https://github.com/yourusername/pianomancer.git
+   git clone https://github.com/fabiomigueldp/pianomancer.git
    cd pianomancer
    ```
 
