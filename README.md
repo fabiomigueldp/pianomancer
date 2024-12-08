@@ -131,25 +131,48 @@ A blend of music, visuals, and interactivity, Pianomancer allows you to create m
    - 🎼 Press `1` to load and play a MIDI file.
    - 🎨 Press `2` to change the SoundFont.
    - 🔁 Toggle Loop Playback: `3`.
+   - ▶️ Play/Pause MIDI Playback: `4`.
    - 🔼 Adjust the octave: `[Decrease]` / `[Increase]`.
    - ⏩ Adjust playback speed: `-` / `+`.
    - ❌ Quit: `Q`.  
      Stop MIDI playback: `S`.
 
 3. **Visual Feedback**  
-   The Christmas tree lights up dynamically, reacting to your interactions, with active notes displayed below.
+   The Christmas tree lights up dynamically, reacting to your interactions, with active notes displayed below. During MIDI playback, the status (Playing/Paused) is displayed for better awareness.
 
 ---
 
 ## 📜 Changelog
 
+### v1.2
+
+- **Play/Pause MIDI Playback:**  
+  Press `4` to toggle between playing and pausing the current MIDI playback, offering greater control over your listening experience.
+
+- **Dynamic SoundFont Management:**  
+  Ability to change the SoundFont (`2` key) during MIDI playback. The application will automatically pause playback, allow you to select a new SoundFont, and then resume playback seamlessly.
+
+- **Enhanced Playback Controls:**  
+  Adjust octave (`[`/`]`) and playback speed (`-`/`+`) even while a MIDI file is playing, providing more flexibility in how you experience your music.
+
+- **MIDIPlayer Class Enhancements:**  
+  Improved the MIDIPlayer class to handle new playback states such as pausing, resuming, and integrating SoundFont changes without interrupting the user experience.
+
+- **Visual Feedback Improvements:**  
+  Added MIDI playback status display (Playing/Paused) to keep users informed about the current state of MIDI playback.
+
+- **Code Refactoring and Stability:**  
+  Optimized event handling and error management to ensure smoother performance and prevent conflicts between different controls.
+
 ### v1.1
+
 - **Loop Playback Mode:** Press `3` to toggle loop mode. When active, MIDI playback will automatically restart upon completion. The status is displayed as "Loop Mode: ON/OFF."
 - **Enhanced Playback Controls:** Adjust playback speed (`-`/`+`) and octave (`[`/`]`) even during MIDI playback.
 - Removed `[` from the virtual keyboard to resolve conflicts with octave decrease functionality.
 - Removed `-` from the virtual keyboard to resolve conflicts with playback speed adjustment.
 
 ### v1.0
+
 - Initial release of Pianomancer with dynamic visuals, MIDI playback, and SoundFont support.
 
 ---
