@@ -16,6 +16,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
+# Removed '[' and '-' keys from NOTE_MIDI_NUMBERS to avoid conflicts
 NOTE_MIDI_NUMBERS = {
     'z': 48,
     's': 49,
@@ -44,8 +45,6 @@ NOTE_MIDI_NUMBERS = {
     'i': 77,
     'o': 79,
     'p': 81,
-    '-': 82,
-    '[': 83,
     '=': 84,
 }
 
@@ -131,7 +130,6 @@ class ChristmasTreeDisplay:
             pass
 
         note_range = list(range(21, 109))
-        min_note = min(note_range)
         max_note_val = max(note_range)
         max_display_x = max_x - 2
         num_notes = len(note_range)
@@ -178,6 +176,7 @@ def piano_app(stdscr):
         key_to_midi_note = {}
         midi_mode = False
         midi_player = None
+        loop_mode = False
 
         operating_system = platform.system()
         logging.info(f"Detected operating system: {operating_system}")
@@ -254,6 +253,7 @@ def piano_app(stdscr):
             "'R' to start/stop recording, 'P' to play recording.",
             "'1' to enter MIDI playback mode.",
             "'2' to change the SoundFont.",
+            "'3' to toggle loop mode ON/OFF.",
             "'[' or ']' to decrease/increase the octave.",
             "'-' or '+' to decrease/increase playback speed.",
             "'Q' to quit, 'S' to stop MIDI playback.",
@@ -285,9 +285,6 @@ def piano_app(stdscr):
         virtual_keyboard = ' '.join(NOTE_MIDI_NUMBERS.keys())
         active_notes = set()
 
-        MIN_HEIGHT = 24
-        MIN_WIDTH = 80
-
         while True:
             try:
                 max_y, max_x = stdscr.getmaxyx()
@@ -305,8 +302,10 @@ def piano_app(stdscr):
                 stdscr.addstr(start_line + len(instructions), 2, virtual_keyboard, curses.color_pair(3))
                 stdscr.addstr(start_line + len(instructions) + 1, 2, f"Octave Shift: {octave_shift}", curses.color_pair(6))
                 stdscr.addstr(start_line + len(instructions) + 2, 2, f"Playback Speed: {playback_speed:.1f}x", curses.color_pair(6))
+                loop_status = "ON" if loop_mode else "OFF"
+                stdscr.addstr(start_line + len(instructions) + 3, 2, f"Loop Mode: {loop_status}", curses.color_pair(6))
                 if is_recording:
-                    stdscr.addstr(start_line + len(instructions) + 3, 2, "Recording... (Press 'R' to stop)", curses.color_pair(1))
+                    stdscr.addstr(start_line + len(instructions) + 4, 2, "Recording... (Press 'R' to stop)", curses.color_pair(1))
                 stdscr.noutrefresh()
 
                 curses.doupdate()
@@ -325,6 +324,7 @@ def piano_app(stdscr):
                         key_char = ''
                     logging.debug(f"Key pressed: {key_char}")
 
+                    # Universal controls (work in both normal and MIDI mode)
                     if key_char == 'q':
                         if midi_mode and midi_player:
                             midi_player.stop()
@@ -338,31 +338,29 @@ def piano_app(stdscr):
                             midi_player.stop()
                             midi_mode = False
                             logging.info("MIDI playback stopped by user.")
-                    elif key_char == '2':
-                        soundfonts = [f for f in os.listdir('.') if f.lower().endswith('.sf2')]
-                        if not soundfonts:
-                            logging.error("No SoundFont (.sf2) files found in the current directory.")
-                            stdscr.addstr(0, 0, "No SoundFont (.sf2) files found in the current directory.")
-                            stdscr.refresh()
-                            time.sleep(2)
-                            continue
-
-                        selected_soundfont = select_soundfont(stdscr, soundfonts)
-                        stdscr.clear()
-                        if selected_soundfont:
-                            try:
-                                soundfont_id = fs.sfload(selected_soundfont)
-                                for channel in range(16):
-                                    fs.program_select(channel, soundfont_id, 0, 0)
-                                logging.info(f"SoundFont '{selected_soundfont}' loaded successfully.")
-                            except Exception as e:
-                                logging.exception(f"Error loading SoundFont '{selected_soundfont}'.")
-                                stdscr.addstr(0, 0, f"Error loading SoundFont '{selected_soundfont}'. Check the log.")
-                                stdscr.refresh()
-                                time.sleep(2)
-                        else:
-                            logging.info("SoundFont selection canceled by user.")
+                    elif key_char == '[':
+                        octave_shift -= 1
+                        logging.info(f"Octave decreased to: {octave_shift}")
+                    elif key_char == ']':
+                        octave_shift += 1
+                        logging.info(f"Octave increased to: {octave_shift}")
+                    elif key_char == '-':
+                        playback_speed = max(0.1, playback_speed - 0.1)
+                        if midi_mode and midi_player:
+                            midi_player.playback_speed = playback_speed
+                        logging.info(f"Playback speed decreased to: {playback_speed:.1f}x")
+                    elif key_char == '+':
+                        playback_speed += 0.1
+                        if midi_mode and midi_player:
+                            midi_player.playback_speed = playback_speed
+                        logging.info(f"Playback speed increased to: {playback_speed:.1f}x")
+                    elif key_char == '3':
+                        loop_mode = not loop_mode
+                        if midi_mode and midi_player:
+                            midi_player.loop_mode = loop_mode
+                        logging.info(f"Loop mode toggled: {loop_mode}")
                     else:
+                        # Controls that only apply when not in MIDI playback mode
                         if not midi_mode:
                             if key_char in NOTE_MIDI_NUMBERS:
                                 midi_note = NOTE_MIDI_NUMBERS[key_char] + (octave_shift * 12)
@@ -395,7 +393,7 @@ def piano_app(stdscr):
                                     is_recording = False
                                     play_recording(recording, octave_shift, playback_speed, fs, stdscr)
                                 else:
-                                    stdscr.addstr(start_line + len(instructions) + 4, 2, "No recording to play.", curses.color_pair(1))
+                                    stdscr.addstr(start_line + len(instructions) + 5, 2, "No recording to play.", curses.color_pair(1))
                                     stdscr.refresh()
                                     time.sleep(1)
                                     logging.info("Attempted playback without recording.")
@@ -405,58 +403,74 @@ def piano_app(stdscr):
                                     stdscr.clear()
                                     if selected_midi:
                                         midi_mode = True
-                                        midi_player = MIDIPlayer(selected_midi, octave_shift, playback_speed, fs, active_notes, stdscr)
+                                        midi_player = MIDIPlayer(selected_midi, octave_shift, playback_speed, fs, active_notes, stdscr, loop_mode)
                                         logging.info(f"Starting MIDI playback: {selected_midi}")
                                 else:
-                                    stdscr.addstr(start_line + len(instructions) + 4, 2, "No MIDI files found.", curses.color_pair(1))
+                                    stdscr.addstr(start_line + len(instructions) + 5, 2, "No MIDI files found.", curses.color_pair(1))
                                     stdscr.refresh()
                                     time.sleep(1)
                                     logging.info("No MIDI files found for playback.")
-                            elif key_char == '[':
-                                octave_shift -= 1
-                                logging.info(f"Octave decreased to: {octave_shift}")
-                            elif key_char == ']':
-                                octave_shift += 1
-                                logging.info(f"Octave increased to: {octave_shift}")
-                            elif key_char == '-':
-                                playback_speed = max(0.1, playback_speed - 0.1)
-                                logging.info(f"Playback speed decreased to: {playback_speed:.1f}x")
-                            elif key_char == '+':
-                                playback_speed += 0.1
-                                logging.info(f"Playback speed increased to: {playback_speed:.1f}x")
+                            elif key_char == '2':
+                                soundfonts = [f for f in os.listdir('.') if f.lower().endswith('.sf2')]
+                                if not soundfonts:
+                                    logging.error("No SoundFont (.sf2) files found in the current directory.")
+                                    stdscr.addstr(0, 0, "No SoundFont (.sf2) files found in the current directory.")
+                                    stdscr.refresh()
+                                    time.sleep(2)
+                                    continue
+
+                                selected_soundfont = select_soundfont(stdscr, soundfonts)
+                                stdscr.clear()
+                                if selected_soundfont:
+                                    try:
+                                        soundfont_id = fs.sfload(selected_soundfont)
+                                        for channel in range(16):
+                                            fs.program_select(channel, soundfont_id, 0, 0)
+                                        logging.info(f"SoundFont '{selected_soundfont}' loaded successfully.")
+                                    except Exception as e:
+                                        logging.exception(f"Error loading SoundFont '{selected_soundfont}'.")
+                                        stdscr.addstr(0, 0, f"Error loading SoundFont '{selected_soundfont}'. Check the log.")
+                                        stdscr.refresh()
+                                        time.sleep(2)
+                                else:
+                                    logging.info("SoundFont selection canceled by user.")
                             elif key_char == ' ':
                                 for midi_note in list(active_notes):
                                     if is_recording:
                                         recording.append(('note_off', midi_note, current_time))
                                     fs.noteoff(0, midi_note)
-                                    logging.debug(f"Manually recording note OFF for {midi_note} at {current_time}")
+                                    logging.debug(f"Manually stopping note {midi_note}")
                                 active_notes.clear()
                                 key_to_midi_note.clear()
                                 logging.debug("All notes stopped manually.")
 
                 if midi_mode and midi_player:
                     if not midi_player.is_playing:
-                        midi_mode = False
-                        logging.info("MIDI playback mode deactivated.")
+                        if midi_player.loop_mode:
+                            # If looping, the player will restart automatically inside update()
+                            pass
+                        else:
+                            midi_mode = False
+                            logging.info("MIDI playback mode deactivated.")
                     else:
                         midi_player.update()
 
                 keys_to_stop = []
-                for key_char, t in pressed_keys.items():
+                for k_char, t in pressed_keys.items():
                     if current_time - t > 0.1:
-                        keys_to_stop.append(key_char)
+                        keys_to_stop.append(k_char)
 
-                for key_char in keys_to_stop:
-                    if key_char in key_to_midi_note:
-                        midi_note = key_to_midi_note[key_char]
+                for k_char in keys_to_stop:
+                    if k_char in key_to_midi_note:
+                        midi_note = key_to_midi_note[k_char]
                         if is_recording:
                             recording.append(('note_off', midi_note, current_time))
                         fs.noteoff(0, midi_note)
                         if midi_note in active_notes:
                             active_notes.remove(midi_note)
-                        del key_to_midi_note[key_char]
-                        logging.debug(f"Recording note OFF after threshold: {key_char} at {current_time}")
-                    del pressed_keys[key_char]
+                        del key_to_midi_note[k_char]
+                        logging.debug(f"Recording note OFF after threshold: {k_char} at {current_time}")
+                    del pressed_keys[k_char]
 
                 time.sleep(0.01)
             except Exception as e:
@@ -477,7 +491,6 @@ def play_recording(recording, octave_shift, playback_speed, fs, stdscr):
             return
         start_time = recording[0][2]
         active_notes = set()
-        total_events = len(recording)
         for i, event in enumerate(recording):
             event_type, midi_note, event_time = event
             if i == 0:
@@ -503,7 +516,7 @@ def play_recording(recording, octave_shift, playback_speed, fs, stdscr):
         logging.exception("Error during playback.")
 
 class MIDIPlayer:
-    def __init__(self, midi_file, octave_shift, playback_speed, fs, active_notes, stdscr):
+    def __init__(self, midi_file, octave_shift, playback_speed, fs, active_notes, stdscr, loop_mode=False):
         try:
             self.midi = mido.MidiFile(midi_file)
             self.octave_shift = octave_shift
@@ -515,6 +528,7 @@ class MIDIPlayer:
             self.interrupted = False
             self.active_notes = set()
             self.global_active_notes = active_notes
+            self.loop_mode = loop_mode
             self.prepare_messages()
             self.stdscr = stdscr
             logging.info(f"MIDIPlayer initialized for file: {midi_file}")
@@ -548,10 +562,7 @@ class MIDIPlayer:
 
                 if current_time >= message_time:
                     if not msg.is_meta:
-                        if hasattr(msg, 'channel'):
-                            channel = msg.channel
-                        else:
-                            channel = 0
+                        channel = msg.channel if hasattr(msg, 'channel') else 0
                         if msg.type == 'note_on' and msg.velocity > 0:
                             midi_note = msg.note + (self.octave_shift * 12)
                             self.fs.noteon(channel, midi_note, msg.velocity)
@@ -574,8 +585,16 @@ class MIDIPlayer:
                     break
 
             if self.current_message_index >= self.total_messages and not self.active_notes:
-                self.is_playing = False
-                logging.info("MIDI playback completed.")
+                # Finished playback
+                if self.loop_mode and not self.interrupted:
+                    # Restart playback
+                    self.current_message_index = 0
+                    self.start_time = time.perf_counter()
+                    self.is_playing = True
+                    logging.info("MIDI playback looped back to start.")
+                else:
+                    self.is_playing = False
+                    logging.info("MIDI playback completed.")
         except Exception as e:
             logging.exception("Error during MIDIPlayer update.")
 
@@ -602,7 +621,7 @@ def select_midi_file(stdscr, midi_files):
                     stdscr.addstr(idx + 3, 2, f"> {file}", curses.color_pair(2) | curses.A_REVERSE)
                 else:
                     stdscr.addstr(idx + 3, 2, f"  {file}", curses.color_pair(7))
-            stdscr.addstr(len(midi_files) + 4, 2, "Use the up/down arrows to navigate and Enter to select.", curses.color_pair(6))
+            stdscr.addstr(len(midi_files) + 4, 2, "Use the up/down arrows to navigate and Enter to select. 'Q' to cancel.", curses.color_pair(6))
             stdscr.refresh()
 
             key = stdscr.getch()
@@ -635,7 +654,7 @@ def select_soundfont(stdscr, soundfonts):
                     stdscr.addstr(idx + 3, 2, f"> {file}", curses.color_pair(2) | curses.A_REVERSE)
                 else:
                     stdscr.addstr(idx + 3, 2, f"  {file}", curses.color_pair(7))
-            stdscr.addstr(len(soundfonts) + 4, 2, "Use the up/down arrows to navigate and Enter to select.", curses.color_pair(6))
+            stdscr.addstr(len(soundfonts) + 4, 2, "Use the up/down arrows to navigate and Enter to select. 'Q' to cancel.", curses.color_pair(6))
             stdscr.refresh()
 
             key = stdscr.getch()

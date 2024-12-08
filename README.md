@@ -17,7 +17,8 @@ A blend of music, visuals, and interactivity, Pianomancer allows you to create m
 - 🎹 **SoundFont Support:** Customize the instrument sound by selecting your preferred `.sf2` files.
 - 🎶 **MIDI Playback:** Load and play MIDI files for an immersive experience.
 - 🔴 **Record & Playback:** Record your melodies and listen to them anytime.
-- 🎛️ **Customizable Controls:** Adjust octave, playback speed, and more.
+- 🔁 **Loop Playback Mode:** Automatically restart MIDI playback upon completion (toggle with `3` key).
+- 🎛️ **Customizable Controls:** Adjust octave, playback speed, and more, even during playback.
 
 ---
 
@@ -129,6 +130,7 @@ A blend of music, visuals, and interactivity, Pianomancer allows you to create m
    - 🔊 Press `P` to playback your recording.
    - 🎼 Press `1` to load and play a MIDI file.
    - 🎨 Press `2` to change the SoundFont.
+   - 🔁 Toggle Loop Playback: `3`.
    - 🔼 Adjust the octave: `[Decrease]` / `[Increase]`.
    - ⏩ Adjust playback speed: `-` / `+`.
    - ❌ Quit: `Q`.  
@@ -136,6 +138,19 @@ A blend of music, visuals, and interactivity, Pianomancer allows you to create m
 
 3. **Visual Feedback**  
    The Christmas tree lights up dynamically, reacting to your interactions, with active notes displayed below.
+
+---
+
+## 📜 Changelog
+
+### v1.1
+- **Loop Playback Mode:** Press `3` to toggle loop mode. When active, MIDI playback will automatically restart upon completion. The status is displayed as "Loop Mode: ON/OFF."
+- **Enhanced Playback Controls:** Adjust playback speed (`-`/`+`) and octave (`[`/`]`) even during MIDI playback.
+- Removed `[` from the virtual keyboard to resolve conflicts with octave decrease functionality.
+- Removed `-` from the virtual keyboard to resolve conflicts with playback speed adjustment.
+
+### v1.0
+- Initial release of Pianomancer with dynamic visuals, MIDI playback, and SoundFont support.
 
 ---
 
